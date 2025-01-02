@@ -1,35 +1,103 @@
-﻿// See C for more information
-//Console.WriteLine("Hello, World!");
-using System;
+﻿using System;
 using static System.Console;
 
+public class Employee
+{
+    public double Salary { get; set; }
+    public int PaychecksPerYear { get; set; }
+    public Deductions Deductions { get; set; }
+    public Taxes Taxes { get; set; }
 
-//declare const and variables
-double salary = 42500;
-double paychecksPerYear = 24;
-double grossCheck;
-double netCheck;
+    public Employee(double salary, int paychecksPerYear)
+    {
+        Salary = salary;
+        PaychecksPerYear = paychecksPerYear;
+        Deductions = new Deductions();
+        Taxes = new Taxes();
+    }
 
-//declare tax variables 
-double fedPercent = .12;
-//double fedFlatAmount = 9.35;
-double stateTax;
-double socialSecurity;
-double medicare;
+    public double GrossPayPerCheck()
+    {
+        return Salary / PaychecksPerYear;
+    }
 
+    public double NetPay()
+    {
+        double grossPay = GrossPayPerCheck();
+        double totalDeductions = Deductions.TotalDeductions(grossPay);
+        double totalTaxes = Taxes.TotalTaxes(grossPay, Deductions.PretaxDeductions(grossPay));
+        return grossPay - totalDeductions - totalTaxes;
+    }
+}
 
-//delcare deductions 
-double heathIns = 139.70;
-double dentalIns = 13.45;
-double vision = 1.18;
+public class Deductions
+{
+    public double HealthInsurance { get; set; } = 139.70;
+    public double DentalInsurance { get; set; } = 13.45;
+    public double Vision { get; set; } = 1.18;
+    public double Four01k { get; set; } = 51.23;
 
+    public double PretaxDeductions(double grossPay)
+    {
+        return HealthInsurance + DentalInsurance + Vision + Four01k;
+    }
 
-//calculate gross pay per pay period through equasion
-grossCheck = salary / paychecksPerYear;
-WriteLine("Your gross pay per paycheck will be {0}",grossCheck);
+    public double TotalDeductions(double grossPay)
+    {
+        return PretaxDeductions(grossPay);
+    }
+}
 
-//deduct taxes and deduction and use subtraction to create a writeline of your net pay 
-// will have to write an if statement for fed percent to tax the percent amount after 1038
+public class Taxes
+{
+    private const double FedPercent = 0.12;
+    private const double StatePercent = 0.045;
+    private const double SocialSecurityPercent = 0.062;
+    private const double MedicarePercent = 0.0145;
+    private const double FederalTaxRate = 0.0935;
 
-//declare fed taxable wages. For later notes, the eqasion for fed taxable wages is (grosspay - pretax deductions - 401k)
-double fedTaxableWages = grossCheck - heathIns - dentalIns - vision;
+    public double SocialSecurityTax(double grossPay)
+    {
+        return grossPay * SocialSecurityPercent;
+    }
+
+    public double StateTax(double grossPay)
+    {
+        return grossPay * StatePercent;
+    }
+
+    public double MedicareTax(double grossPay)
+    {
+        return grossPay * MedicarePercent;
+    }
+
+    public double FederalTax(double grossPay, double pretaxDeductions)
+    {
+        double taxableIncome = grossPay - pretaxDeductions;
+        return taxableIncome * FederalTaxRate;
+    }
+
+    public double TotalTaxes(double grossPay, double pretaxDeductions)
+    {
+        return SocialSecurityTax(grossPay) + StateTax(grossPay) + MedicareTax(grossPay) + FederalTax(grossPay, pretaxDeductions);
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        // Example: Employee with a salary of 50000, paid biweekly (26 paychecks per year)
+        Employee employee = new Employee(50000, 26);
+
+        double grossPay = employee.GrossPayPerCheck();
+        double netPay = employee.NetPay();
+
+        WriteLine($"Gross pay per paycheck: {grossPay:C}");
+        WriteLine($"Net pay per paycheck: {netPay:C}");
+        WriteLine("Below are your deductions per paycheck");
+        WriteLine("");
+            
+            
+            }
+}
